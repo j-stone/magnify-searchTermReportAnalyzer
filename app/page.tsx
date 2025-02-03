@@ -9,6 +9,7 @@ import KeywordReviewer from "./components/KeywordReviewer"
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null)
+  const [csvData, setCsvData] = useState<string[][]>([])
   const [spendThreshold, setSpendThreshold] = useState<number>(0)
   const [cpcThreshold, setCpcThreshold] = useState<number>(0)
   const [isReviewing, setIsReviewing] = useState(false)
@@ -17,6 +18,15 @@ export default function Home() {
     const selectedFile = event.target.files?.[0]
     if (selectedFile) {
       setFile(selectedFile)
+      
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const text = e.target?.result
+        // Parse CSV data into an array and save it to state
+        const rows = (text as string).split('\n').map(row => row.split(','))
+        setCsvData(rows)
+      }
+      reader.readAsText(selectedFile)
     }
   }
 
@@ -52,7 +62,7 @@ export default function Home() {
                   value={spendThreshold}
                   onChange={(e) => setSpendThreshold(Number(e.target.value))}
                   min="0"
-                  step="0.01"
+                  step="0.1"
                 />
               </div>
               <div>
@@ -63,7 +73,7 @@ export default function Home() {
                   value={cpcThreshold}
                   onChange={(e) => setCpcThreshold(Number(e.target.value))}
                   min="0"
-                  step="0.01"
+                  step="0.1"
                 />
               </div>
               <Button type="submit">Start Review</Button>
