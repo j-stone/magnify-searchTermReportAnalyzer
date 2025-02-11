@@ -33,6 +33,7 @@ export default function KeywordReviewer({ file, spendThreshold, cpcThreshold, on
       const records = parse(text, { columns: true, skip_empty_lines: true })
       const filteredKeywords = records
         .filter((record: any) => !record["Search term"].startsWith("Total:"))
+        .filter((record: any) => record["Added/Excluded"] !== "Excluded")
         .map((record: any) => {
           const cost = Number.parseFloat(record["Cost"])
           const conversions = Number.parseFloat(record["Conversions"])
@@ -41,7 +42,7 @@ export default function KeywordReviewer({ file, spendThreshold, cpcThreshold, on
           return {
             keyword: record["Search term"],
             spend: cost,
-            impressions: Number.parseInt(record["Impressions"], 10),
+            impressions: Number.parseInt(record["Impr."], 10),
             clicks: Number.parseInt(record["Clicks"], 10),
             costPerConversion,
           }
@@ -70,6 +71,25 @@ export default function KeywordReviewer({ file, spendThreshold, cpcThreshold, on
       window.removeEventListener("keydown", handleKeyDown)
     }
   }, [handleKeyDown])
+
+  const handleExport = () => {
+    // Create CSV content with just the keywords
+    const csvContent = negativeKeywords
+      .map(keyword => keyword.keyword)
+      .join('\n');
+    
+    // Create a Blob with the CSV content
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Create a download link and trigger it
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'negative-keywords.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   if (currentIndex >= keywords.length) {
     return (
@@ -125,6 +145,13 @@ export default function KeywordReviewer({ file, spendThreshold, cpcThreshold, on
             </CardContent>
           </Card>
         )}
+
+        <CardContent className="pt-6">
+          <p className="mb-4">Review complete! {negativeKeywords.length} keywords selected.</p>
+          <Button onClick={handleExport}>
+            Export Negative Keywords
+          </Button>
+        </CardContent>
       </div>
     )
   }
